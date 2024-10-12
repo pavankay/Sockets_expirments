@@ -24,5 +24,19 @@ A socket is an endpoint for sending or receiving data across a computer network.
 To get started, clone the repository:
 
 ```sh
-git clone <repository-url>
-cd <repository-directory>
+git clone https://github.com/pavankay/Sockets_expirments
+cd Sockets_expirments
+```
+### Running the code
+
+- Run the server code using the following command:
+
+```sh
+python Multiplaye\server.py
+```
+- Run the client code using the following command:
+
+```sh
+python Multiplaye\client.py
+```
+-Note you can run multiple clients to see the multiplayer in action.
