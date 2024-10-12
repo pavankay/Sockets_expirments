@@ -39,4 +39,4 @@ python Multiplaye\server.py
 ```sh
 python Multiplaye\client.py
 ```
--Note you can run multiple clients to see the multiplayer in action.
+- Note you can run multiple clients to see the multiplayer in action.
