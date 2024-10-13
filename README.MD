@@ -17,7 +17,7 @@ A socket is an endpoint for sending or receiving data across a computer network.
 - Install the required packages using `pip`:
 
 ```sh
- pip install pygame weboscket 
+ pip install -r requirements.txt 
 ```
 ### Clone the Repository
 
@@ -28,9 +28,13 @@ git clone https://github.com/pavankay/Sockets_expirments
 cd Sockets_expirments
 ```
 ### Running the code
+## Run Multiplayer_box
 
+- cd into directory
+```sh
+ cd Multiplayer_box
+```
 - Run the server code using the following command:
-
 ```sh
 python Multiplaye\server.py
 ```
@@ -39,4 +43,24 @@ python Multiplaye\server.py
 ```sh
 python Multiplaye\client.py
 ```
-- Note you can run multiple clients to see the multiplayer in action.
+
+
+### Run Multiplayer_box_web
+
+- cd into directory
+
+```sh
+ cd Multiplayer_box_web
+```
+- Run the server code using the following command:
+```sh
+python Multiplaye\server.py
+```
+- Open [http://127.0.0.1:5000/](http://127.0.0.1:5000/) in your browser
+
+
+### Notes
+
+- You can run multiple clients or browser tabs to see the multiplayer in action.
+- "localhost" means on your own computer so it can only be accessed by your own computer. You can make it multiplayer over other computer connect to the internet by changing the uri and on the connecting client, in the Multiplayer_box/network.py file for example, on line 6 (or as a perameter of the class in client.py) you can set that to http://<local IP>:<port>. The port in our case is 8765.
+- You can set this up easisly to make it online from anywhere in the world by using cloud deployment like Azure, AWS, GCP.
