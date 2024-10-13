@@ -1,6 +1,6 @@
 import asyncio
-import websockets
 import json
+import websockets
 
 class Network:
     def __init__(self, uri="ws://localhost:8765"):
@@ -10,7 +10,7 @@ class Network:
         self.color = None
         self.on_position_update = None
         self.on_connection = None
-        self.positions = {}  # Add this line to initialize positions
+        self.positions = {}
 
     async def connect(self):
         try:
@@ -18,7 +18,6 @@ class Network:
             self.connected = True
             print("Connected to WebSocket server")
 
-            # Receive initial color information
             initial_data = await self.websocket.recv()
             initial_data = json.loads(initial_data)
             if "your_color" in initial_data:
@@ -37,7 +36,7 @@ class Network:
             try:
                 response = await self.websocket.recv()
                 data = json.loads(response)
-                print(f"Received data: {data}")  # Debug print
+                print(f"Received data: {data}")
                 if "positions" in data:
                     self.positions = data["positions"]
                     if self.on_position_update:

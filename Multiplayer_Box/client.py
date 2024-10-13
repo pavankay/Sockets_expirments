@@ -6,6 +6,9 @@ print("Initializing Pygame and setting up the game window")
 pygame.init()
 
 WIDTH, HEIGHT = 800, 600
+BORDER_WIDTH = 5
+PLAYER_SIZE = 50
+
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("WebSocket Game")
 font = pygame.font.Font(None, 36)
@@ -14,22 +17,35 @@ network = Network()
 
 def draw_game_state(positions):
     screen.fill((255, 255, 255))  # Fill screen with white
-    print(f"Drawing positions: {positions}")  # Debug print
+    print(f"Drawing positions: {positions}")
+
+    # Draw border
+    border_color = (0, 0, 0)  # Black color for the border
+    pygame.draw.rect(screen, border_color, (0, 0, WIDTH, HEIGHT), BORDER_WIDTH)
+
+    # Calculate the playable area
+    play_area = pygame.Rect(BORDER_WIDTH, BORDER_WIDTH,
+                            WIDTH - 2*BORDER_WIDTH, HEIGHT - 2*BORDER_WIDTH)
+
     for client_id, pos in positions.items():
         color = pygame.Color(pos["color"])
-        pygame.draw.rect(screen, color, (pos["x"], pos["y"], 50, 50))
-        print(f"Drew rectangle at {pos['x']}, {pos['y']} with color {color}")  # Debug print
+        # Adjust rectangle position to be within the border
+        rect = pygame.Rect(pos["x"] + BORDER_WIDTH, pos["y"] + BORDER_WIDTH, PLAYER_SIZE, PLAYER_SIZE)
+        # Ensure the rectangle stays within the play area
+        rect.clamp_ip(play_area)
+        pygame.draw.rect(screen, color, rect)
+        print(f"Drew rectangle at {rect.x}, {rect.y} with color {color}")
 
     if network.color:
         text = f"You are: {network.color}"
         text_surface = font.render(text, True, (0, 0, 0))
         text_rect = text_surface.get_rect()
-        text_rect.topright = (WIDTH - 10, 10)
+        text_rect.topright = (WIDTH - BORDER_WIDTH - 10, BORDER_WIDTH + 10)
         screen.blit(text_surface, text_rect)
-        print(f"Drew text: {text}")  # Debug print
+        print(f"Drew text: {text}")
 
     pygame.display.flip()
-    print("Screen updated")  # Debug print
+    print("Screen updated")
 
 async def game_loop():
     print("Connecting to WebSocket server")
