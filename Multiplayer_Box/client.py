@@ -1,7 +1,6 @@
 import pygame
 import asyncio
-import websockets
-import json
+from network import Network
 
 print("Initializing Pygame and setting up the game window")
 pygame.init()
@@ -11,73 +10,72 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("WebSocket Game")
 font = pygame.font.Font(None, 36)
 
+network = Network()
+
+def draw_game_state(positions):
+    screen.fill((255, 255, 255))  # Fill screen with white
+    print(f"Drawing positions: {positions}")  # Debug print
+    for client_id, pos in positions.items():
+        color = pygame.Color(pos["color"])
+        pygame.draw.rect(screen, color, (pos["x"], pos["y"], 50, 50))
+        print(f"Drew rectangle at {pos['x']}, {pos['y']} with color {color}")  # Debug print
+
+    if network.color:
+        text = f"You are: {network.color}"
+        text_surface = font.render(text, True, (0, 0, 0))
+        text_rect = text_surface.get_rect()
+        text_rect.topright = (WIDTH - 10, 10)
+        screen.blit(text_surface, text_rect)
+        print(f"Drew text: {text}")  # Debug print
+
+    pygame.display.flip()
+    print("Screen updated")  # Debug print
+
 async def game_loop():
     print("Connecting to WebSocket server")
-    uri = "ws://localhost:8765"
-    async with websockets.connect(uri) as websocket:
-        print("Connected to WebSocket server")
-        clock = pygame.time.Clock()
-        running = True
-        frame_count = 0
-        your_color = None
+    await network.connect()
 
-        # Receive initial color information
-        initial_data = await websocket.recv()
-        initial_data = json.loads(initial_data)
-        if "your_color" in initial_data:
-            your_color = initial_data["your_color"]
-            print(f"Your assigned color is: {your_color}")
+    def on_position_update(positions):
+        draw_game_state(positions)
 
-        while running:
-            frame_count += 1
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
+    network.on_position_update = on_position_update
 
-            keys = pygame.key.get_pressed()
-            move = {"x": 0, "y": 0}
-            if keys[pygame.K_LEFT]:
-                move["x"] -= 5
-            if keys[pygame.K_RIGHT]:
-                move["x"] += 5
-            if keys[pygame.K_UP]:
-                move["y"] -= 5
-            if keys[pygame.K_DOWN]:
-                move["y"] += 5
+    clock = pygame.time.Clock()
+    running = True
 
-            if move["x"] != 0 or move["y"] != 0:
-                print(f"Sending move: {move}")
-                await websocket.send(json.dumps({"move": move}))
+    # Initial draw
+    if network.positions:
+        draw_game_state(network.positions)
 
-            try:
-                print("Waiting for server response")
-                response = await asyncio.wait_for(websocket.recv(), timeout=0.1)
-                print(f"Received response: {response}")
-                data = json.loads(response)
-                positions = data["positions"]
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-                screen.fill((255, 255, 255))
-                for client_id, pos in positions.items():
-                    color = pygame.Color(pos["color"])
-                    pygame.draw.rect(screen, color, (pos["x"], pos["y"], 50, 50))
+        keys = pygame.key.get_pressed()
+        move = {"x": 0, "y": 0}
+        if keys[pygame.K_LEFT]:
+            move["x"] -= 5
+        if keys[pygame.K_RIGHT]:
+            move["x"] += 5
+        if keys[pygame.K_UP]:
+            move["y"] -= 5
+        if keys[pygame.K_DOWN]:
+            move["y"] += 5
 
-                # Render text
-                if your_color:
-                    text = f"You are: {your_color}"
-                    text_surface = font.render(text, True, (0, 0, 0))
-                    text_rect = text_surface.get_rect()
-                    text_rect.topright = (WIDTH - 10, 10)
-                    screen.blit(text_surface, text_rect)
+        if move["x"] != 0 or move["y"] != 0:
+            print(f"Sending move: {move}")
+            await network.send_move(move)
 
-                pygame.display.flip()
-                print("Updated screen with new positions")
-            except asyncio.TimeoutError:
-                print("No response from server (timeout)")
-                pass
+        # Redraw the game state every frame
+        if network.positions:
+            draw_game_state(network.positions)
 
-            clock.tick(60)
+        await asyncio.sleep(0.01)  # Short sleep to allow other tasks to run
+        clock.tick(60)
 
-        pygame.quit()
+    await network.disconnect()
+    pygame.quit()
 
 print("Starting the game loop")
 asyncio.get_event_loop().run_until_complete(game_loop())
